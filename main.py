@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -6,6 +6,7 @@ app.config['DEBUG'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:launchcode@localhost:3306/blogz'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
+app.secret_key = '95U60TmQqa3coPJC'
 
 class Blog(db.Model):
 
@@ -30,13 +31,78 @@ class User(db.Model):
         self.username = username
         self.password = password
 
-@app.route('/signup', methods=['POST', 'GET'])
-def signup():
+@app.before_request
+def require_login():
+    allowed_routes = ['login', 'signup', 'base', 'blog']
+    if request.endpoint not in allowed_routes and 'username' not in session:
+        return redirect('/login')
 
+@app.route('/signup', methods=['POST','GET'])
+def signup():
+    if request.method == "GET":
+        return render_template("signup.html")
+
+    if request.method == 'POST':
+
+        username = request.form['username']
+        password = request.form['password']
+        verify = request.form['verify']
+        username_error = ""
+        password_error = ""
+        verify_error = ""
+
+        if username == "" or " " in username:
+            username_error = "Username Field must have characters"
+            username = ""
+        elif len(username) < 3:
+            username_error = "Username must be at least 3 characters"
+            username = ""
+
+        if password == "" or " " in username:
+            password_error = "Password Field must have characters"
+            password = ""
+        elif len(password) < 3:
+            password_error = "Password must be at least 3 characters"
+            password = ""
+        elif password != verify:
+                verify_error = "The Passwords do not match"
+
+        if username_error or password_error or verify_error:
+            return render_template('signup.html', username=username, username_error=username_error, 
+                password_error=password_error, verify_error=verify_error)
+
+        existing_user = User.query.filter_by(username=username).first()
+        if not existing_user:
+            new_user = User(username,password)
+            db.session.add(new_user)
+            db.session.commit()
+            session['username'] = username
+            return redirect('/newpost')   #redirect to the '/newpost' page with username being stored in a session
+        else:
+            username_error = "This username already exists"
+            return render_template('signup.html', username=username, username_error=username_error)
+    return render_template('signup.html')
 
 
 
 @app.route('/login', methods=['POST', 'GET'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and user.password == password:
+            session['username'] = username
+            flash("Logged in")
+            return redirect('/newpost')
+        elif not user:
+            no_user_error = "That username does not exist"
+            return render_template('login.html',username_error=no_user_error)
+        elif user.password != password:
+            verify = "That is not the correct password"
+            return render_template('login.html',username=username, password_error=verify)
+
+    return render_template('login.html')
 
 
 
