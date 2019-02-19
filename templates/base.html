@@ -1,28 +1,52 @@
 <!doctype html>
 <html>
+
   <head>
     <title>Blogz</title>
     <style>
       .error { color: red; }
     </style>
   </head>
+  
   <body>
+    <table>
+      <tr>
 
-    <div>
-      <a href="/">Home</a> 
-      <a href="/blog">All Blogs</a>  
-      <a href="/newpost">Add a Blog Entry</a> 
-      <a href="/signup">Signup</a> 
-      <a href="/login">Login</a> 
-      <a href="/logout">Logout</a>
-    </div>
+        <form action="/">
+          <input type="submit" value="Home">      
+        </form>
 
-    {% with messages = get_flashed_messages(with_categories=True) %}
-    <ul>
-    {% for category,message in messages %}
-        <li class="{{category}}">{{message}}</li>
-    {% endfor %}
-    </ul>
+        <form action="/blog">
+          <input type="submit" value="All Blogs">      
+        </form>
+
+        <form action="/newpost">
+          <input type="submit" value="Add a Blog Entry">      
+        </form>
+
+        <form action="/signup">
+          <input type="submit" value="Signup">      
+        </form>
+
+        <form action="/login">
+          <input type="submit" value="Login">      
+        </form>
+      
+        <form action="/logout">
+          <input type="submit" value="Logout">      
+        </form>
+      </tr>
+
+    </table>
+
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul class=flashes>
+          {% for message in messages %}
+          <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     {% endwith %}
 
     
