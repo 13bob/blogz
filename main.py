@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogz:launchcode@localhost:3306/blogz'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogzz:launchcode@localhost:3306/blogzz'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 app.secret_key = '95U60TmQqa3coPJC'
@@ -15,7 +15,7 @@ class Blog(db.Model):
     body = db.Column(db.String(300))
     owner_id = db.Column(db.Integer,db.ForeignKey('user.id'))
 
-    def __init__(self, title, body):
+    def __init__(self, title, body, owner):
         self.title = title
         self.body = body
         self.owner = owner
@@ -33,7 +33,7 @@ class User(db.Model):
 
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'signup', 'base', 'blog']
+    allowed_routes = ['login', 'signup','index', 'blog']
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect('/login')
 
@@ -105,55 +105,73 @@ def login():
     return render_template('login.html')
 
 
+@app.route('/logout')
+def logout():
+    del session['username']
+    return redirect('/blog')
 
 
 
 
 @app.route('/blog', methods=['POST', 'GET'])
 def blog():
-    blogs = Blog.query.all()
-    id = request.query_string
-    if request.method == 'GET':
-        if not id:
-            return render_template('blog.html', blogs=blogs)
-        else:
-            b = int(request.args.get('b'))
-            blog = Blog.query.get(b)
-            return render_template('singleposting.html', blog=blog)
 
-@app.route('/newpost')
-def newpost():
-    return render_template('newposting.html')
-
-@app.route('/newpost', methods=['POST'])
-def add_post():
-    title = request.form['title']
-    body = request.form['body']
-
-    if not title and not body:
-        return render_template('newposting.html', 
-                                title_error='Please enter a title', 
-                                body_error='Please enter your blog')
-
-    elif not title:
-        return render_template('newposting.html', 
-                                title_error='Please enter a title', body=body)
+    if "user" in request.args:
+        user_id = request.args.get("user")
+        user = User.query.get(user_id)
+        user_blogs = Blog.query.filter_by(owner=user).all()
+        return render_template("singleuser.html", page_title = user.username + "'s Posts!", 
+                                                      user_blogs=user_blogs)
     
-    elif not body:
-        return render_template('newposting.html', title=title, 
-                                body_error='Please enter your blog')
-        
-    else:
-        new_post = Blog(title, body)
-        db.session.add(new_post)
-        db.session.commit()
+    single_post = request.args.get("id")
+    if single_post:
+        blog = Blog.query.get(single_post)
+        return render_template("singleposting.html", blog=blog)
 
-        blog = Blog.query.get(new_post.id)
-        return render_template('singleposting.html', blog=blog)
+    else:
+        blogs = Blog.query.all()
+        return render_template('blog.html', page_title="All Blog Posts!", blogs=blogs)
+
+
+@app.route('/newpost', methods=['POST', 'GET'])
+def add_post():
+
+    if request.method == 'GET':
+        return render_template('newposting.html')
+
+    if request.method == 'POST':
+        title = request.form['title']
+        body = request.form['body']
+
+        if not title and not body:
+            return render_template('newposting.html', 
+                                    title_error='Please enter a title', 
+                                    body_error='Please enter your blog')
+
+        elif not title:
+            return render_template('newposting.html', 
+                                    title_error='Please enter a title', body=body)
         
-@app.route("/")
-def index():
-    return redirect("/blog")
+        elif not body:
+            return render_template('newposting.html', title=title, 
+                                    body_error='Please enter your blog')
+            
+        else:
+            owner = User.query.filter_by(username=session['username']).first()
+            new_post = Blog(title, body, owner)
+            db.session.add(new_post)
+            db.session.commit()
+
+            blog = Blog.query.get(new_post.id)
+            return render_template('singleposting.html', blog=blog)
+        users = User.query.all()
+        return render_template('index.html', users=users)
+
+@app.route('/',  methods=['POST', 'GET'])
+def index():    
+    users = User.query.all()
+    return render_template('index.html', users=users)
+
     
 if __name__ == '__main__':
     app.run() 
