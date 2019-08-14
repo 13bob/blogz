@@ -2,15 +2,15 @@
 
 {% block content %}
     
-    {% if user_blogs|length == 0 %}
-        <p>No Blog Posts Added</p>
+    {% if user_estimates|length == 0 %}
+        <p>No Estimates Added</p>
 
     {% else %}
-        {% for blog in user_blogs|sort(attribute='id', reverse = True) %}
+        {% for estimate in user_estimates|sort(attribute='id', reverse = True) %}
 
-        <h2><a href="/blog?id={{blog.id}}">{{blog.title}}</a></h2>
-        <p>{{blog.body}}</p>
-        <p><a href="/blog?user={{blog.owner_id}}">{{blog.owner.username}}</a></p>
+        <h2><a href="/estimate?id={{estimate.id}}">{{estimate.title}}</a></h2>
+        <p>{{estimate.body}}</p>
+        <p><a href="/estimate?user={{estimate.owner_id}}">{{estimate.owner.username}}</a></p>
         
         {% endfor %}
     {% endif %}

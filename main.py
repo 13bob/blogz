@@ -3,12 +3,12 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://blogzz:launchcode@localhost:3306/blogzz'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://capstone-project:capstone-project@localhost:3306/capstone-project'
 app.config['SQLALCHEMY_ECHO'] = True
 db = SQLAlchemy(app)
 app.secret_key = '95U60TmQqa3coPJC'
 
-class Blog(db.Model):
+class Estimate(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120))
@@ -25,7 +25,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True)
     password = db.Column(db.String(20))
-    blogs = db.relationship('Blog', backref='owner')
+    estimates = db.relationship('Estimate', backref='owner')
 
     def __init__(self, username, password):
         self.username = username
@@ -33,7 +33,7 @@ class User(db.Model):
 
 @app.before_request
 def require_login():
-    allowed_routes = ['login', 'signup','index', 'blog']
+    allowed_routes = ['login', 'signup','index', 'estimate']
     if request.endpoint not in allowed_routes and 'username' not in session:
         return redirect('/login')
 
@@ -108,29 +108,29 @@ def login():
 @app.route('/logout')
 def logout():
     del session['username']
-    return redirect('/blog')
+    return redirect('/')
 
 
 
 
-@app.route('/blog', methods=['POST', 'GET'])
-def blog():
+@app.route('/estimate', methods=['POST', 'GET'])
+def estimate():
 
     if "user" in request.args:
         user_id = request.args.get("user")
         user = User.query.get(user_id)
-        user_blogs = Blog.query.filter_by(owner=user).all()
+        user_estimates = Estimate.query.filter_by(owner=user).all()
         return render_template("singleuser.html", page_title = user.username + "'s Posts!", 
-                                                      user_blogs=user_blogs)
+                                                      user_estimates=user_estimates)
     
     single_post = request.args.get("id")
     if single_post:
-        blog = Blog.query.get(single_post)
-        return render_template("singleposting.html", blog=blog)
+        estimate = Estimate.query.get(single_post)
+        return render_template("singleposting.html", estimate=estimate)
 
     else:
-        blogs = Blog.query.all()
-        return render_template('blog.html', page_title="All Blog Posts!", blogs=blogs)
+        estimates = Estimate.query.all()
+        return render_template('estimate.html', estimates=estimates)
 
 
 @app.route('/newpost', methods=['POST', 'GET'])
@@ -146,7 +146,7 @@ def add_post():
         if not title and not body:
             return render_template('newposting.html', 
                                     title_error='Please enter a title', 
-                                    body_error='Please enter your blog')
+                                    body_error='Please enter your estimate')
 
         elif not title:
             return render_template('newposting.html', 
@@ -154,16 +154,16 @@ def add_post():
         
         elif not body:
             return render_template('newposting.html', title=title, 
-                                    body_error='Please enter your blog')
+                                    body_error='Please enter your estimate')
             
         else:
             owner = User.query.filter_by(username=session['username']).first()
-            new_post = Blog(title, body, owner)
+            new_post = Estimate(title, body, owner)
             db.session.add(new_post)
             db.session.commit()
 
-            blog = Blog.query.get(new_post.id)
-            return render_template('singleposting.html', blog=blog)
+            estimate = Estimate.query.get(new_post.id)
+            return render_template('singleposting.html', estimate=estimate)
         users = User.query.all()
         return render_template('index.html', users=users)
 

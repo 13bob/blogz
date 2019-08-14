@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+    <h1 align=center>Estimates</h1>
+    <hr/>
+    {% if estimates|length == 0 %}
+    <p>No estimates have been submitted yet</p>
+    {% else %}
+      {% for estimate in estimates %}
+      <div>
+        <a href="/estimate?id={{estimate.id}}"><h2>{{estimate.title}}</h2></a>
+        <p>{{estimate.body}}</p>
+        <p><a href="/estimate?user={{estimate.owner_id}}">Written by: {{estimate.owner.username}}</a></p>
+        <hr  />
+      </div>
+
+      {% endfor%}
+    {% endif %}        
+    
+{% endblock %}

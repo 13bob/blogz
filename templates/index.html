@@ -2,14 +2,8 @@
 
 {% block content %}
 
-<h1>All Users</h1>
+<h1 id=signup align=center>Bob's Roofing</h1> <br>
 
-{% for user in users %}
-
-  <ul>
-    <li><a href="/blog?user={{user.id}}">{{user.username}}</a></li>
-  </ul>
-
-{% endfor %}
+<img src="https://paceavenue.com/wp-content/uploads/2017/10/GAF-Roofing.png" alt="Roof Pic" class="center">
 
 {% endblock %}
